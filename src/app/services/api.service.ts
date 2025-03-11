@@ -11,14 +11,12 @@ import { RouteService } from './route.service';
 export class ApiService {
   private headers = new HttpHeaders({
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept'
+    'Accept': 'application/json'
   });
 
-  private readonly TIMEOUT = 15000; // 15 seconds timeout
-  private readonly RETRY_ATTEMPTS = 3; // Increased retry attempts
+  private readonly TIMEOUT = 30000; // Increased timeout to 30 seconds
+  private readonly RETRY_ATTEMPTS = 3;
+  private readonly RETRY_DELAY = 2000; // 2 seconds between retries
 
   constructor(
     private http: HttpClient,
@@ -33,17 +31,32 @@ export class ApiService {
     let errorMessage = `Error al cargar ${resource}`;
     
     if (error.error instanceof ErrorEvent) {
+      // Client-side error
       errorMessage = `Error de red: ${error.error.message}`;
-    } else if (error.status === 0) {
-      errorMessage = `Error de conexión: No se puede conectar al servidor (${this.routeService.getBaseUrl()}). Por favor, verifique su conexión a internet y que el servidor esté accesible.`;
-    } else if (error.status === 404) {
-      errorMessage = `Recurso no encontrado: ${resource}`;
-    } else if (error.status === 403) {
-      errorMessage = `Acceso denegado al recurso: ${resource}`;
-    } else if (error.status >= 500) {
-      errorMessage = `Error interno del servidor al cargar ${resource}`;
-    } else if (error.status === 429) {
-      errorMessage = 'Demasiadas solicitudes. Por favor, espere un momento y vuelva a intentar.';
+    } else {
+      // Server-side error
+      switch (error.status) {
+        case 0:
+          errorMessage = `Error de conexión: No se puede conectar al servidor (${this.routeService.getBaseUrl()}). Verifique su conexión a internet y que el servidor esté accesible.`;
+          break;
+        case 404:
+          errorMessage = `No se encontró el recurso: ${resource}`;
+          break;
+        case 403:
+          errorMessage = `Acceso denegado al recurso: ${resource}`;
+          break;
+        case 429:
+          errorMessage = 'Demasiadas solicitudes. Por favor, espere un momento y vuelva a intentar.';
+          break;
+        case 500:
+        case 501:
+        case 502:
+        case 503:
+          errorMessage = `Error del servidor (${error.status}): El servidor no está disponible temporalmente`;
+          break;
+        default:
+          errorMessage = `Error ${error.status}: ${error.message}`;
+      }
     }
     
     console.error('API Error:', errorMessage, error);
@@ -60,7 +73,8 @@ export class ApiService {
         }).pipe(
           retry({
             count: this.RETRY_ATTEMPTS,
-            delay: 1000 // Wait 1 second between retries
+            delay: this.RETRY_DELAY,
+            resetOnSuccess: true
           }),
           timeout(this.TIMEOUT),
           catchError((error: HttpErrorResponse) => {
@@ -92,7 +106,8 @@ export class ApiService {
         }).pipe(
           retry({
             count: this.RETRY_ATTEMPTS,
-            delay: 1000 // Wait 1 second between retries
+            delay: this.RETRY_DELAY,
+            resetOnSuccess: true
           }),
           timeout(this.TIMEOUT),
           catchError((error: HttpErrorResponse) => {

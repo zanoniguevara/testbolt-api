@@ -1,16 +1,25 @@
 import { Component } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { EmpresaListComponent } from './app/components/empresa-list/empresa-list.component';
 import { ArancelListComponent } from './app/components/arancel-list/arancel-list.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [EmpresaListComponent, ArancelListComponent],
+  imports: [
+    EmpresaListComponent,
+    ArancelListComponent,
+    MatToolbarModule
+  ],
   template: `
+    <mat-toolbar color="primary">
+      <span>Sistema de Gestión</span>
+    </mat-toolbar>
+    
     <div class="app-container">
-      <h1>Sistema de Gestión</h1>
       <app-empresa-list></app-empresa-list>
       <app-arancel-list></app-arancel-list>
     </div>
@@ -19,11 +28,13 @@ import { ArancelListComponent } from './app/components/arancel-list/arancel-list
     .app-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 16px;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
+    
+    @media (max-width: 600px) {
+      .app-container {
+        padding: 8px;
+      }
     }
   `]
 })
@@ -33,6 +44,7 @@ export class App {
 
 bootstrapApplication(App, {
   providers: [
-    provideHttpClient(withFetch())
+    provideHttpClient(withFetch()),
+    provideAnimations()
   ]
 }).catch(err => console.error(err));

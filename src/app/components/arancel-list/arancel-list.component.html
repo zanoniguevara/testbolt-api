@@ -1,0 +1,79 @@
+<mat-card class="main-card">
+  <mat-card-header>
+    <mat-card-title>Lista de Aranceles</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <ng-container *ngIf="loading">
+      <mat-progress-bar mode="query"></mat-progress-bar>
+      <div class="skeleton-container">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]">
+          <div class="skeleton-cell" *ngFor="let j of [1,2,3,4,5]"></div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="error" class="error-container">
+      <mat-card class="error-card">
+        <mat-card-content>
+          {{ error }}
+          <button mat-raised-button color="primary" (click)="loadData()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="table-container mat-elevation-z8" *ngIf="!loading && !error && aranceles.length > 0">
+      <table mat-table [dataSource]="aranceles">
+        <ng-container matColumnDef="codigo">
+          <th mat-header-cell *matHeaderCellDef> Código </th>
+          <td mat-cell *matCellDef="let arancel"> {{arancel.Arc_Codigo}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="codigoControl">
+          <th mat-header-cell *matHeaderCellDef> Código Control </th>
+          <td mat-cell *matCellDef="let arancel"> {{arancel.Arc_CodCtrl}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef> Descripción </th>
+          <td mat-cell *matCellDef="let arancel"> {{arancel.Arc_Descrip}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="tasaValor">
+          <th mat-header-cell *matHeaderCellDef> Tasa Valor </th>
+          <td mat-cell *matCellDef="let arancel"> {{arancel.Arc_TasaVal}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="tasaEspecial">
+          <th mat-header-cell *matHeaderCellDef> Tasa Especial </th>
+          <td mat-cell *matCellDef="let arancel"> {{arancel.Arc_TasaEsp}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <div *ngIf="!loading && !error && aranceles.length === 0" class="empty-state">
+      <mat-card>
+        <mat-card-content>
+          <mat-icon class="empty-icon">assignment</mat-icon>
+          <h3>No hay aranceles registrados</h3>
+          <p>No se encontraron registros de aranceles en el sistema.</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="info-card" *ngIf="!loading">
+      <mat-card-content>
+        <div class="endpoint-info">
+          <div class="endpoint-url">Endpoint: {{ apiUrl }}</div>
+          <div class="timeout-info">Tiempo máximo de espera: {{ timeoutSeconds }} segundos</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </mat-card-content>
+</mat-card>
